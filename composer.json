@@ -1,27 +1,28 @@
 {
-  "name": "rikudou/qr-payment-bundle",
+  "name": "uctoplus/qr-payment-wrapper",
   "type": "symfony-bundle",
   "license": "WTFPL",
-  "description": "Symfony bundle for generating QR payments for Czech, Slovak and European standards",
+  "description": "Wrapper for generating QR payments for Czech, Slovak and European standards",
   "authors": [
     {
-      "name": "Dominik Chrástecký",
-      "email": "dominik@chrastecky.cz"
+      "name": "Mário Čechovič",
+      "email": "mario@uctoplus.sk"
     }
   ],
   "require": {
-    "php": ">=7.2",
-    "symfony/framework-bundle": "^4.1",
-    "symfony/yaml": "^4.1",
-    "rikudou/czqrpayment": "^4.0",
-    "rikudou/skqrpayment": "^2.3",
-    "endroid/qr-code": "^3.2",
-    "rikudou/installer": "^1.1",
-    "rikudou/euqrpayment": "^1.0"
+    "php": ">=7.4",
+    "rikudou/czqrpayment": "^5.3",
+    "rikudou/skqrpayment": "^4.2",
+    "rikudou/euqrpayment": "^1.4",
+    "endroid/qr-code": "^3.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9",
+    "bacon/bacon-qr-code": "^2.0.7"
   },
   "autoload": {
     "psr-4": {
-      "Rikudou\\QrPaymentBundle\\": ""
+      "Uctoplus\\QrPaymentWrapper\\": "src/"
     }
   }
 }
