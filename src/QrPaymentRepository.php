@@ -6,7 +6,6 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use LogicException;
-use Rikudou\Iban\Iban\IBAN;
 use Rikudou\QrPayment\QrPaymentInterface;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 use rikudou\SkQrPayment\Payment\QrPaymentOptions;
@@ -17,6 +16,8 @@ class QrPaymentRepository implements QrPaymentInterface
     protected $options = [];
     protected $iban;
     protected $bic;
+
+    protected $xzBinary;
 
     public function __construct(string $iban, ?string $bic, $country = 'EU')
     {
@@ -61,10 +62,10 @@ class QrPaymentRepository implements QrPaymentInterface
         $this->checkParameterValidity();
 
         switch ($this->country) {
-            case "SK":
+            case CountriesEnum::SK:
                 $qrPayment = $this->skPayment();
                 break;
-            case "CZ":
+            case CountriesEnum::CZ:
                 $qrPayment = $this->czPayment();
                 break;
             default:
@@ -152,9 +153,14 @@ class QrPaymentRepository implements QrPaymentInterface
     {
         $iban = new IbanBicPair($this->iban, $this->bic);
         $qrPayment = new QrPayment($iban);
+        if ($this->xzBinary != null) {
+            $qrPayment->setXzBinary($this->xzBinary);
+        }
 
-        if( !empty($this->options[OptionsEnum::CREDITOR_REFERENCE])){
-            $qrPayment->setVariableSymbol($this->options[OptionsEnum::CREDITOR_REFERENCE]);
+        if (!empty($this->options[OptionsEnum::CREDITOR_REFERENCE])) {
+            $qrPayment->setVariableSymbol($this->getFromE2E('VS', $this->options[OptionsEnum::CREDITOR_REFERENCE]));
+            $qrPayment->setSpecificSymbol($this->getFromE2E('SS', $this->options[OptionsEnum::CREDITOR_REFERENCE]));
+            $qrPayment->setConstantSymbol($this->getFromE2E('KS', $this->options[OptionsEnum::CREDITOR_REFERENCE]));
         }
 
         return $qrPayment;
@@ -165,8 +171,10 @@ class QrPaymentRepository implements QrPaymentInterface
         $iban = new IbanBicPair($this->iban, $this->bic);
         $qrPayment = new \rikudou\CzQrPayment\QrPayment($iban);
 
-        if( !empty($this->options[OptionsEnum::CREDITOR_REFERENCE])){
-            $qrPayment->setVariableSymbol($this->options[OptionsEnum::CREDITOR_REFERENCE]);
+        if (!empty($this->options[OptionsEnum::CREDITOR_REFERENCE])) {
+            $qrPayment->setVariableSymbol($this->getFromE2E('VS', $this->options[OptionsEnum::CREDITOR_REFERENCE]));
+            $qrPayment->setSpecificSymbol($this->getFromE2E('SS', $this->options[OptionsEnum::CREDITOR_REFERENCE]));
+            $qrPayment->setConstantSymbol($this->getFromE2E('KS', $this->options[OptionsEnum::CREDITOR_REFERENCE]));
         }
 
         return $qrPayment;
@@ -182,5 +190,36 @@ class QrPaymentRepository implements QrPaymentInterface
             throw new Exception("IBAN not correct");
         }
         return new \rikudou\EuQrPayment\QrPayment($iban);
+    }
+
+    public function setXzBinary($path)
+    {
+        $this->xzBinary = $path;
+        return $this;
+    }
+
+    private function getFromE2E(string $string, $e2e_reference)
+    {
+        $e2e_reference = explode('/', $e2e_reference);
+        if (count($e2e_reference) == 4) {
+            $vs = preg_replace('/\D/', '', $e2e_reference[1]);
+            $ss = preg_replace('/\D/', '', $e2e_reference[2]);
+            $ks = preg_replace('/\D/', '', $e2e_reference[3]);
+        } elseif (count($e2e_reference) == 7) {
+            $vs = preg_replace('/\D/', '', $e2e_reference[2]);
+            $ss = preg_replace('/\D/', '', $e2e_reference[4]);
+            $ks = preg_replace('/\D/', '', $e2e_reference[6]);
+        }
+
+        switch ($string) {
+            case "VS":
+                return $vs;
+            case "SS":
+                return $ss;
+            case "KS":
+                return $ks;
+            default:
+                return null;
+        }
     }
 }
