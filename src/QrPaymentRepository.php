@@ -6,6 +6,7 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use LogicException;
+use rikudou\EuQrPayment\Exceptions\UnsupportedMethodException;
 use Rikudou\QrPayment\QrPaymentInterface;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 use rikudou\SkQrPayment\Payment\QrPaymentOptions;
@@ -98,8 +99,14 @@ class QrPaymentRepository implements QrPaymentInterface
         $_options = [];
         foreach ($options as $key => $value) {
             $methodName = 'set' . ucfirst($key);
-            if (method_exists($qrPaymentInterface, $methodName)) {
-                $_options[$key] = $value;
+            if (!method_exists($qrPaymentInterface, $methodName)) {
+                continue;
+            }
+            try{
+                call_user_func([$qrPaymentInterface, $methodName], $value);
+                $options[$key] = $value;
+            }catch (UnsupportedMethodException $e){
+                // skip if method unsupported
             }
         }
 
@@ -213,11 +220,11 @@ class QrPaymentRepository implements QrPaymentInterface
 
         switch ($string) {
             case "VS":
-                return $vs;
+                return $vs ?? "";
             case "SS":
-                return $ss;
+                return $ss ?? "";
             case "KS":
-                return $ks;
+                return $ks ?? "";
             default:
                 return null;
         }

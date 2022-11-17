@@ -19,6 +19,7 @@ class GeneratorTest extends TestCase
         $repo = new QrPaymentRepository($ibans, $bic, $country);
         $repo->setBeneficiaryName("Mario Cechovic");
         $repo->setCreditorReference("12554");
+        $repo->setDueDate(new \DateTime());
 
         $qrString = $repo->getQrString();
         $this->assertNotEmpty($qrString);
