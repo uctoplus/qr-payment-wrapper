@@ -9,6 +9,13 @@ use BaconQrCode\Writer;
 use PHPUnit\Framework\TestCase;
 use Uctoplus\QrPaymentWrapper\QrPaymentRepository;
 
+/**
+ * Class GeneratorTest
+ *
+ * @author MimoGraphix <mimographix@gmail.com>
+ * @copyright EpicFail | Studio
+ * @package Tests\Unit
+ */
 class GeneratorTest extends TestCase
 {
     /**
