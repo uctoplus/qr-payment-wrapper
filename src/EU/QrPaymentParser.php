@@ -30,8 +30,6 @@ class QrPaymentParser
         if (array_key_exists(11, $exploded))
             $_info = $exploded[11];
 
-//        $iban = new IbanBicPair($_iban, $_bic);
-//        $payment->addIban($iban);
         $iban = new IBAN($_iban);
         $payment = new \rikudou\EuQrPayment\QrPayment($iban);
 

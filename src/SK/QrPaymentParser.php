@@ -32,7 +32,7 @@ class QrPaymentParser extends BaseQrParser implements QrParserInterface
 
         $explode = explode("\t", $step2);
 
-        var_dump($explode);
+//        var_dump($explode);
 
         $payment = new QrPayment();
         $payment->setInternalId($explode[0]);
@@ -66,7 +66,7 @@ class QrPaymentParser extends BaseQrParser implements QrParserInterface
             $payment->setPayeeAddressLine2($explode[$pointer+3]);
 
 
-        var_dump($explode, $payment);
+//        var_dump($explode, $payment);
         return $payment;
     }
 }
