@@ -30,7 +30,7 @@ class BaseQrPaymentParser
                 $this->parser = $parser;
 
                 return $res;
-            } catch (\Exception $exception) {
+            } catch (\Throwable $throwable) {
                 continue;
             }
         }
