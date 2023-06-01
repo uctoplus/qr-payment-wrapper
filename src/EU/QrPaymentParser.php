@@ -2,6 +2,7 @@
 
 namespace Uctoplus\QrPaymentWrapper\EU;
 
+use Exception;
 use rikudou\EuQrPayment\Iban\IBAN;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 use rikudou\SkQrPayment\QrPayment;
@@ -19,6 +20,10 @@ class QrPaymentParser
         $_version = $exploded[1];
         $_charSet = $exploded[2];
         $_type = $exploded[3];  //'SCT' => Sepa Credit Transfer
+
+        if ($_type != 'SCT')
+            throw new Exception('Format not valid.');
+
         $_bic = $exploded[4];
         $_beneficiaryName = $exploded[5];
         $_iban = $exploded[6];

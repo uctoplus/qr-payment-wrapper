@@ -11,6 +11,7 @@ class BaseQrPaymentParser
         \Uctoplus\QrPaymentWrapper\CZ\QrPaymentParser::class,
         \Uctoplus\QrPaymentWrapper\EU\QrPaymentParser::class,
         \Uctoplus\QrPaymentWrapper\SK\QrPaymentParser::class,
+        \Uctoplus\QrPaymentWrapper\CH\QrPaymentParser::class
     ];
 
     private $parser;
