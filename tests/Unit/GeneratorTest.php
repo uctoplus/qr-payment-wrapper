@@ -25,8 +25,15 @@ class GeneratorTest extends TestCase
     {
         $repo = new QrPaymentRepository($ibans, $bic, $country);
         $repo->setBeneficiaryName("Mario Cechovic");
+        $repo->setBeneficiaryAddress('Street 123', '12345', 'Some city - south', 'SK');
         $repo->setCreditorReference("12554");
         $repo->setDueDate(new \DateTime());
+        $repo->setAmount(500);
+        $repo->setCurrency('EUR');
+        $repo->setPaymentReference('test payment');
+
+        $repo->setDebtorName('Customer Name')
+            ->setDebtorAddress('Near river st 1521/2', '54321', 'Small city', 'CZ');
 
         $qrString = $repo->getQrString();
         $this->assertNotEmpty($qrString);
@@ -47,14 +54,19 @@ class GeneratorTest extends TestCase
             ["SK6511000000002618181236", "TATRSKBX", "SK"],
             ["SK6511000000002618181236", "TATRSKBX", "CZ"],
             ["SK6511000000002618181236", "TATRSKBX", "EU"],
+            ["SK6511000000002618181236", "TATRSKBX", "CH"],
 
             ["CZ8850511124577476249167", "KOMBCZPP", "SK"],
             ["CZ8850511124577476249167", "KOMBCZPP", "CZ"],
             ["CZ8850511124577476249167", "KOMBCZPP", "EU"],
+            ["CZ8850511124577476249167", "KOMBCZPP", "CH"],
 
             ["AT561936011357746782", "BMASAT21", "SK"],
             ["AT561936011357746782", "BMASAT21", "CZ"],
             ["AT561936011357746782", "BMASAT21", "EU"],
+            ["AT561936011357746782", "BMASAT21", "CH"],
+
+            ["CH4431999123000889012", "TATRSKBX", "CH"],
         ];
     }
 }

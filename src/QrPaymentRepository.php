@@ -6,11 +6,22 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use LogicException;
+use PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf;
 use rikudou\EuQrPayment\Exceptions\UnsupportedMethodException;
 use Rikudou\QrPayment\QrPaymentInterface;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 use rikudou\SkQrPayment\Payment\QrPaymentOptions;
 use rikudou\SkQrPayment\QrPayment;
+use setasign\Fpdi\Tcpdf\Fpdi;
+use Sprain\SwissQrBill\DataGroup\Element\CombinedAddress;
+use Sprain\SwissQrBill\DataGroup\Element\CreditorInformation;
+use Sprain\SwissQrBill\DataGroup\Element\PaymentAmountInformation;
+use Sprain\SwissQrBill\DataGroup\Element\PaymentReference;
+use Sprain\SwissQrBill\PaymentPart\Output\FpdfOutput\FpdfOutput;
+use Sprain\SwissQrBill\PaymentPart\Output\HtmlOutput\HtmlOutput;
+use Sprain\SwissQrBill\PaymentPart\Output\TcPdfOutput\TcPdfOutput;
+use Sprain\SwissQrBill\QrBill;
+use Sprain\Tests\SwissQrBill\PaymentPart\Output\TcPdfOutput\TcPdfOutputTest;
 
 class QrPaymentRepository implements QrPaymentInterface
 {
@@ -69,6 +80,9 @@ class QrPaymentRepository implements QrPaymentInterface
             case CountriesEnum::CZ:
                 $qrPayment = $this->czPayment();
                 break;
+            case (CountriesEnum::CH && in_array(substr($this->iban, 0, 2), ['CH', 'LI'])):
+                $qrPayment = $this->chPayment();
+                return $qrPayment->getQrCode()->getText();
             default:
                 $qrPayment = $this->euPayment();
         }
@@ -135,10 +149,56 @@ class QrPaymentRepository implements QrPaymentInterface
         return $this;
     }
 
+    public function setDebtorName(string $creditorName)
+    {
+        $this->checkLength($creditorName, 70);
+        $this->options[OptionsEnum::DEBTOR_NAME] = $creditorName;
+
+        return $this;
+    }
+
+    public function setDebtorAddress(string $streetAndNumber, string $zipcode, string $city, string $countryCode2)
+    {
+        $this->checkLength($streetAndNumber, 70);
+        $this->checkLength($zipcode, 10, 3);
+        $this->checkLength($city, 70);
+        $this->checkLength($countryCode2, 2, 2);
+
+        $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER] = $streetAndNumber;
+        $this->options[OptionsEnum::DEBTOR_ZIPCODE] = $zipcode;
+        $this->options[OptionsEnum::DEBTOR_CITY] = $city;
+        $this->options[OptionsEnum::DEBTOR_COUNTRY_CODE2] = $countryCode2;
+
+        return $this;
+    }
+
     public function setBeneficiaryName(string $beneficiaryName)
     {
         $this->checkLength($beneficiaryName, 70);
         $this->options[OptionsEnum::BENEFICIARY_NAME] = $beneficiaryName;
+
+        return $this;
+    }
+
+    public function setBeneficiaryAddress(string $streetAndNumber, string $zipcode, string $city, string $countryCode2)
+    {
+        $this->checkLength($streetAndNumber, 70);
+        $this->checkLength($zipcode, 10, 3);
+        $this->checkLength($city, 70);
+        $this->checkLength($countryCode2, 2, 2);
+
+        $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER] = $streetAndNumber;
+        $this->options[OptionsEnum::BENEFICIARY_ZIPCODE] = $zipcode;
+        $this->options[OptionsEnum::BENEFICIARY_CITY] = $city;
+        $this->options[OptionsEnum::BENEFICIARY_COUNTRY_CODE2] = $countryCode2;
+
+        return $this;
+    }
+
+    public function setPaymentReference(string $reference)
+    {
+        $this->checkLength($reference, 27);
+        $this->options[OptionsEnum::PAYMENT_REFERENCE] = str_pad($reference, 28, '0', STR_PAD_LEFT);
 
         return $this;
     }
@@ -197,6 +257,72 @@ class QrPaymentRepository implements QrPaymentInterface
             throw new Exception("IBAN not correct");
         }
         return new \rikudou\EuQrPayment\QrPayment($iban);
+    }
+
+    protected function chPayment()
+    {
+        $qrBill = QrBill::create();
+
+        $creditor = CombinedAddress::create(
+            $this->options[OptionsEnum::BENEFICIARY_NAME],
+            $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER],
+            $this->options[OptionsEnum::BENEFICIARY_ZIPCODE] . ' ' . $this->options[OptionsEnum::BENEFICIARY_CITY],
+            $this->options[OptionsEnum::BENEFICIARY_COUNTRY_CODE2]
+        );
+        $qrBill->setCreditor($creditor);
+
+        $creditorInormation = CreditorInformation::create($this->iban);
+        $qrBill->setCreditorInformation($creditorInormation);
+
+        $paymentAmountInfo = PaymentAmountInformation::create($this->options[QrPaymentOptions::CURRENCY], $this->options[QrPaymentOptions::AMOUNT]);
+        $qrBill->setPaymentAmountInformation($paymentAmountInfo);
+
+        $paymentReference = PaymentReference::create(PaymentReference::TYPE_QR, $this->options[OptionsEnum::PAYMENT_REFERENCE]);
+        $qrBill->setPaymentReference($paymentReference);
+
+        if (!empty($this->options[OptionsEnum::DEBTOR_NAME])) {
+            $debtor = CombinedAddress::create(
+                $this->options[OptionsEnum::DEBTOR_NAME],
+                $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER],
+                $this->options[OptionsEnum::DEBTOR_ZIPCODE] . ' ' . $this->options[OptionsEnum::DEBTOR_CITY],
+                $this->options[OptionsEnum::DEBTOR_COUNTRY_CODE2]
+            );
+            $qrBill->setUltimateDebtor($debtor);
+        }
+
+        return $qrBill;
+    }
+
+    /**
+     * @param $type
+     * @return string
+     * @throws Exception
+     */
+    public function generateChPaymentStrip($type = 'html')
+    {
+        if ($type !== 'html')
+            throw new Exception('Not implemented yet');
+
+        $qrPayment = $this->chPayment();
+
+        $output = new HtmlOutput($qrPayment, 'en');
+
+        $html = $output->setPrintable(false)
+            ->getPaymentPart();
+
+        return $html;
+
+        /*
+        $fpdf = new \FPDF('P', 'mm', 'A4');
+        $fpdf->addPage();
+
+        $payStrip = new FpdfOutput($qrPayment, 'en', $fpdf);
+        $payStrip->setPrintable(false)
+            ->getPaymentPart();
+
+        $fname = 'test_pdf.pdf';
+        $fpdf->Output($fname);
+        */
     }
 
     public function setXzBinary($path)
