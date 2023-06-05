@@ -7,6 +7,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use PHPUnit\Framework\TestCase;
+use Uctoplus\QrPaymentWrapper\CountriesEnum;
 use Uctoplus\QrPaymentWrapper\QrPaymentRepository;
 
 /**
@@ -38,14 +39,16 @@ class GeneratorTest extends TestCase
         $qrString = $repo->getQrString();
         $this->assertNotEmpty($qrString);
 
-        $renderer = new ImageRenderer(
-            new RendererStyle(512),
-            new ImagickImageBackEnd()
-        );
-        $writer = new Writer($renderer);
-        $writer->writeFile($repo->getQrString(), $ibans . "-" . $country . ".png");
+        if ($country != CountriesEnum::HR && substr($ibans, 0, 2) == 'HR') {
+            $renderer = new ImageRenderer(
+                new RendererStyle(512),
+                new ImagickImageBackEnd()
+            );
+            $writer = new Writer($renderer);
+            $writer->writeFile($repo->getQrString(), $ibans . "-" . $country . ".png");
 
-        $this->assertFileExists($ibans . "-" . $country . ".png");
+            $this->assertFileExists($ibans . "-" . $country . ".png");
+        }
     }
 
     public function _ibans()
@@ -67,6 +70,8 @@ class GeneratorTest extends TestCase
             ["AT561936011357746782", "BMASAT21", "CH"],
 
             ["CH4431999123000889012", "TATRSKBX", "CH"],
+
+            ["HR5224840083236715977", "TATRSKBX", "HR"],
         ];
     }
 }

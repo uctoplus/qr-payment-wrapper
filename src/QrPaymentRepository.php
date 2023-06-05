@@ -2,26 +2,24 @@
 
 namespace Uctoplus\QrPaymentWrapper;
 
+use BigFish\PDF417\Renderers\SvgRenderer;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use LogicException;
-use PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf;
 use rikudou\EuQrPayment\Exceptions\UnsupportedMethodException;
 use Rikudou\QrPayment\QrPaymentInterface;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 use rikudou\SkQrPayment\Payment\QrPaymentOptions;
 use rikudou\SkQrPayment\QrPayment;
-use setasign\Fpdi\Tcpdf\Fpdi;
 use Sprain\SwissQrBill\DataGroup\Element\CombinedAddress;
 use Sprain\SwissQrBill\DataGroup\Element\CreditorInformation;
 use Sprain\SwissQrBill\DataGroup\Element\PaymentAmountInformation;
 use Sprain\SwissQrBill\DataGroup\Element\PaymentReference;
-use Sprain\SwissQrBill\PaymentPart\Output\FpdfOutput\FpdfOutput;
 use Sprain\SwissQrBill\PaymentPart\Output\HtmlOutput\HtmlOutput;
-use Sprain\SwissQrBill\PaymentPart\Output\TcPdfOutput\TcPdfOutput;
 use Sprain\SwissQrBill\QrBill;
-use Sprain\Tests\SwissQrBill\PaymentPart\Output\TcPdfOutput\TcPdfOutputTest;
+use Uctoplus\QrPaymentWrapper\HR\Generator;
+use Uctoplus\QrPaymentWrapper\HR\GeneratorData;
 
 class QrPaymentRepository implements QrPaymentInterface
 {
@@ -83,6 +81,8 @@ class QrPaymentRepository implements QrPaymentInterface
             case (CountriesEnum::CH && in_array(substr($this->iban, 0, 2), ['CH', 'LI'])):
                 $qrPayment = $this->chPayment();
                 return $qrPayment->getQrCode()->getText();
+//            case (CountriesEnum::HR && substr($this->iban, 0, 2) == 'HR'):
+//                return $this->hrPayment();
             default:
                 $qrPayment = $this->euPayment();
         }
@@ -149,10 +149,14 @@ class QrPaymentRepository implements QrPaymentInterface
         return $this;
     }
 
-    public function setDebtorName(string $creditorName)
+    public function setDebtorName(string $debtorName)
     {
-        $this->checkLength($creditorName, 70);
-        $this->options[OptionsEnum::DEBTOR_NAME] = $creditorName;
+        if ($this->country == 'HR')
+            $this->checkLength($debtorName, 22);
+        else
+            $this->checkLength($debtorName, 70);
+
+        $this->options[OptionsEnum::DEBTOR_NAME] = $debtorName;
 
         return $this;
     }
@@ -197,8 +201,17 @@ class QrPaymentRepository implements QrPaymentInterface
 
     public function setPaymentReference(string $reference)
     {
-        $this->checkLength($reference, 27);
-        $this->options[OptionsEnum::PAYMENT_REFERENCE] = str_pad($reference, 28, '0', STR_PAD_LEFT);
+        if ($this->country == 'CH') {
+            $reference = preg_replace("/[^0-9]/", "", $reference);
+            $reference = str_pad($reference, 27, '0', STR_PAD_LEFT);
+            $this->checkLength($reference, 27);
+        } else if ($this->country == 'HR') {
+            $this->checkLength($reference, 22);
+        } else {
+            $this->checkLength($reference, 40);
+        }
+
+        $this->options[OptionsEnum::PAYMENT_REFERENCE] = $reference;
 
         return $this;
     }
@@ -259,7 +272,7 @@ class QrPaymentRepository implements QrPaymentInterface
         return new \rikudou\EuQrPayment\QrPayment($iban);
     }
 
-    protected function chPayment()
+    public function chPayment()
     {
         $qrBill = QrBill::create();
 
@@ -293,12 +306,47 @@ class QrPaymentRepository implements QrPaymentInterface
         return $qrBill;
     }
 
+    protected function hrPayment()
+    {
+        $debtor = new \stdClass();
+        $debtor->name = $this->options[OptionsEnum::DEBTOR_NAME];
+        $debtor->address = $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER];
+        $debtor->city = $this->options[OptionsEnum::DEBTOR_CITY];
+
+        $creditor = new \stdClass();
+        $creditor->name = $this->options[OptionsEnum::BENEFICIARY_NAME];
+        $creditor->address = $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER];
+        $creditor->city = $this->options[OptionsEnum::BENEFICIARY_CITY];
+
+        $data = new GeneratorData(
+            $debtor,
+            $creditor,
+            $this->iban,
+            $this->getCurrency(),
+            $this->getAmount(),
+            'HR00',
+            $this->options[OptionsEnum::PAYMENT_REFERENCE],
+            'COST',
+            $this->options[OptionsEnum::PAYMENT_REFERENCE]
+        );
+
+        $generator = new Generator(null, new SvgRenderer([
+            'color' => 'black',
+            'scale' => 5,
+        ]));
+
+        $html = $generator->render($data);
+        $posB = strpos($html, '<svg', 0);
+
+        return substr($html, $posB);
+    }
+
     /**
      * @param $type
      * @return string
      * @throws Exception
      */
-    public function generateChPaymentStrip($type = 'html')
+    public function generateChPaymentSlip($type = 'html')
     {
         if ($type !== 'html')
             throw new Exception('Not implemented yet');
@@ -323,6 +371,22 @@ class QrPaymentRepository implements QrPaymentInterface
         $fname = 'test_pdf.pdf';
         $fpdf->Output($fname);
         */
+    }
+
+    public function generateHrPaymentSlip($type = 'html')
+    {
+        $qrPayment = $this->hrPayment();    //svg
+
+        $imagick = new \Imagick();
+        $imagick->readImageBlob($qrPayment);
+        $imagick->setImageFormat('png32');
+        $png =  $imagick->getImageBlob();
+
+        $htmlRes = '<div id="hr_payment_slip">'
+            . '<img src="data:image/png;base64,' . base64_encode($png) . ' width="100%" style="width: 8cm; height: auto;" />'
+            . '</div>';
+
+        return $htmlRes;
     }
 
     public function setXzBinary($path)

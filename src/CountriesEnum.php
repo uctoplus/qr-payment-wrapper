@@ -8,4 +8,5 @@ class CountriesEnum
     const CZ = "CZ";
     const EU = "EU";
     const CH = "CH";
+    const HR = "HR";
 }
