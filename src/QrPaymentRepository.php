@@ -336,9 +336,10 @@ class QrPaymentRepository implements QrPaymentInterface
         ]));
 
         $html = $generator->render($data);
-        $posB = strpos($html, '<svg', 0);
 
-        return substr($html, $posB);
+        return $html;
+//        $posB = strpos($html, '<svg', 0);
+//        return substr($html, $posB);
     }
 
     /**
