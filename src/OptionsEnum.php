@@ -20,4 +20,8 @@ class OptionsEnum
 
     const REMITTANCE_TEXT = "remittanceText";
     const PAYMENT_REFERENCE = "paymentReference";
+
+    const HR_MODEL = "hrModel";
+    const HR_PURPOSE = "hrPurpose";
+    const HR_DESCRIPTION = "hrDescription";
 }

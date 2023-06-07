@@ -74,4 +74,37 @@ class GeneratorTest extends TestCase
             ["HR5224840083236715977", "TATRSKBX", "HR"],
         ];
     }
+
+
+    /**
+     * @dataProvider _ibansSlip
+     */
+    public function test_create_payment_slip($ibans, $bic, $country)
+    {
+        $repo = new QrPaymentRepository($ibans, $bic, $country);
+        $repo->setBeneficiaryName("Mario Cechovic");
+        $repo->setBeneficiaryAddress('Street 123', '12345', 'Some city - south', CountriesEnum::HR);
+        $repo->setCreditorReference("12554");
+        $repo->setDueDate(new \DateTime());
+        $repo->setAmount(random_int(1,1000000));
+        $repo->setCurrency('EUR');
+        $repo->setPaymentReference('test payment');
+
+        $repo->setDebtorName('Customer Name')
+            ->setDebtorAddress('Near river st 1521/2', '54321', 'Small city', CountriesEnum::HR);
+
+        $qrString = $repo->getQrString();
+        $this->assertNotEmpty($qrString);
+
+        $repo->generateHrPaymentSlip();
+    }
+
+
+    public function _ibansSlip()
+    {
+        return [
+            ["HR5224840083236715977", "TATRSKBX", "HR"],
+        ];
+    }
+
 }

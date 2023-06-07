@@ -5,9 +5,12 @@ namespace Uctoplus\QrPaymentWrapper;
 use BigFish\PDF417\Renderers\SvgRenderer;
 use DateTimeInterface;
 use Exception;
+use Imagick;
+use ImagickDraw;
 use InvalidArgumentException;
 use LogicException;
 use rikudou\EuQrPayment\Exceptions\UnsupportedMethodException;
+use rikudou\EuQrPayment\Iban\IBAN;
 use Rikudou\QrPayment\QrPaymentInterface;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 use rikudou\SkQrPayment\Payment\QrPaymentOptions;
@@ -18,6 +21,7 @@ use Sprain\SwissQrBill\DataGroup\Element\PaymentAmountInformation;
 use Sprain\SwissQrBill\DataGroup\Element\PaymentReference;
 use Sprain\SwissQrBill\PaymentPart\Output\HtmlOutput\HtmlOutput;
 use Sprain\SwissQrBill\QrBill;
+use stdClass;
 use Uctoplus\QrPaymentWrapper\HR\Generator;
 use Uctoplus\QrPaymentWrapper\HR\GeneratorData;
 
@@ -116,10 +120,10 @@ class QrPaymentRepository implements QrPaymentInterface
             if (!method_exists($qrPaymentInterface, $methodName)) {
                 continue;
             }
-            try{
+            try {
                 call_user_func([$qrPaymentInterface, $methodName], $value);
                 $options[$key] = $value;
-            }catch (UnsupportedMethodException $e){
+            } catch (UnsupportedMethodException $e) {
                 // skip if method unsupported
             }
         }
@@ -151,7 +155,7 @@ class QrPaymentRepository implements QrPaymentInterface
 
     public function setDebtorName(string $debtorName)
     {
-        if ($this->country == 'HR')
+        if ($this->country == CountriesEnum::HR)
             $this->checkLength($debtorName, 22);
         else
             $this->checkLength($debtorName, 70);
@@ -201,11 +205,11 @@ class QrPaymentRepository implements QrPaymentInterface
 
     public function setPaymentReference(string $reference)
     {
-        if ($this->country == 'CH') {
+        if ($this->country == CountriesEnum::CH) {
             $reference = preg_replace("/[^0-9]/", "", $reference);
             $reference = str_pad($reference, 27, '0', STR_PAD_LEFT);
             $this->checkLength($reference, 27);
-        } else if ($this->country == 'HR') {
+        } else if ($this->country == CountriesEnum::HR) {
             $this->checkLength($reference, 22);
         } else {
             $this->checkLength($reference, 40);
@@ -263,9 +267,9 @@ class QrPaymentRepository implements QrPaymentInterface
     protected function euPayment()
     {
         if (is_string($this->iban)) {
-            $iban = new \rikudou\EuQrPayment\Iban\IBAN($this->iban);
+            $iban = new IBAN($this->iban);
         } elseif (is_array($this->iban)) {
-            $iban = new \rikudou\EuQrPayment\Iban\IBAN($this->iban[0]);
+            $iban = new IBAN($this->iban[0]);
         } else {
             throw new Exception("IBAN not correct");
         }
@@ -308,12 +312,20 @@ class QrPaymentRepository implements QrPaymentInterface
 
     protected function hrPayment()
     {
-        $debtor = new \stdClass();
+        if(empty($this->options[OptionsEnum::HR_MODEL])){
+            $this->options[OptionsEnum::HR_MODEL] = "HR00";
+        }
+
+//        if(empty($this->options[OptionsEnum::HR_PURPOSE])){
+//            $this->options[OptionsEnum::HR_PURPOSE] = "COST";
+//        }
+
+        $debtor = new stdClass();
         $debtor->name = $this->options[OptionsEnum::DEBTOR_NAME];
         $debtor->address = $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER];
         $debtor->city = $this->options[OptionsEnum::DEBTOR_CITY];
 
-        $creditor = new \stdClass();
+        $creditor = new stdClass();
         $creditor->name = $this->options[OptionsEnum::BENEFICIARY_NAME];
         $creditor->address = $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER];
         $creditor->city = $this->options[OptionsEnum::BENEFICIARY_CITY];
@@ -324,10 +336,10 @@ class QrPaymentRepository implements QrPaymentInterface
             $this->iban,
             $this->getCurrency(),
             $this->getAmount(),
-            'HR00',
+            $this->options[OptionsEnum::HR_MODEL],
             $this->options[OptionsEnum::PAYMENT_REFERENCE],
-            'COST',
-            $this->options[OptionsEnum::PAYMENT_REFERENCE]
+            $this->options[OptionsEnum::HR_PURPOSE] ?? "",
+            $this->options[OptionsEnum::HR_DESCRIPTION] ?? $this->options[OptionsEnum::PAYMENT_REFERENCE]
         );
 
         $generator = new Generator(null, new SvgRenderer([
@@ -374,18 +386,107 @@ class QrPaymentRepository implements QrPaymentInterface
         */
     }
 
+    /**
+     * @param Imagick $image
+     * @param $size
+     * @param $angle
+     * @param $x
+     * @param $y
+     * @param $color
+     * @param $font
+     * @param $text
+     * @param $spacing
+     * @return void
+     */
+    private function imagettftextWsb(&$image, $size, $angle, $x, $y, $color, $font, $text, $spacing = 0)
+    {
+        $ctx = new ImagickDraw();
+        $ctx->setFillColor($color);
+        $ctx->setFontSize($size);
+        $ctx->setFont($font);
+
+        if ($spacing == 0) {
+            $image->annotateImage($ctx, $x, $y, $angle, $text);
+        } else {
+            $temp_x = $x;
+            $iMax = strlen($text);
+            for ($i = 0; $i < $iMax; $i++) {
+                $image->annotateImage($ctx, $temp_x, $y, $angle, $text[$i]);
+                $temp_x += $spacing + 14.7;
+            }
+        }
+    }
+
     public function generateHrPaymentSlip($type = 'html')
     {
         $qrPayment = $this->hrPayment();    //svg
 
-        $imagick = new \Imagick();
-        $imagick->readImageBlob($qrPayment);
-        $imagick->setImageFormat('png32');
-        $png =  $imagick->getImageBlob();
+        $qrCode = new Imagick();
+        $qrCode->readImageBlob($qrPayment);
+//        $qrCode->setImageFormat('png32');
+//        $png =  $imagick->getImageBlob();
+
+        $font_roboto = __DIR__ . '/../resources/RobotoMono-Regular.ttf';
+
+        $black = new \ImagickPixel();
+        $black->setColor('rgba(48, 48, 48, 1.0)');
+
+        $slip = new Imagick();
+        $slip->readImage(__DIR__ . '/../resources/hub-3a.jpg');
+
+        $this->imagettftextWsb($slip, 18, 0, 402, 54, $black, $font_roboto, $this->getCurrency(), 3);
+
+        $total = "=" . number_format( $this->getAmount(), 2, "", "");
+        $x_total = 768 - (strlen($total) * 17);
+        $this->imagettftextWsb($slip, 18, 0, $x_total, 55, $black, $font_roboto, $total, 3);
+        $this->imagettftextWsb($slip, 18, 0, 401, 160, $black, $font_roboto, $this->iban, 3);
+        $this->imagettftextWsb($slip, 18, 0, 278, 202, $black, $font_roboto, $this->options[OptionsEnum::HR_MODEL], 3);
+        $this->imagettftextWsb($slip, 18, 0, 384, 202, $black, $font_roboto, $this->options[OptionsEnum::PAYMENT_REFERENCE], 3);
+
+        if (!empty($this->options[OptionsEnum::HR_PURPOSE])) {
+            $purpose = $this->options[OptionsEnum::HR_PURPOSE];
+            $this->imagettftextWsb($slip, 18, 0, 277, 250, $black, $font_roboto, $purpose, 3);
+        }
+
+        $this->imagettftextWsb($slip, 12, 0, 438, 227, $black, $font_roboto, $this->options[OptionsEnum::HR_DESCRIPTION] ?? $this->options[OptionsEnum::PAYMENT_REFERENCE]);
+        $this->imagettftextWsb($slip, 12, 0, 805, 240, $black, $font_roboto, $this->options[OptionsEnum::HR_DESCRIPTION] ?? $this->options[OptionsEnum::PAYMENT_REFERENCE]);
+
+        $total2 = $this->getCurrency() . " =" . number_format( $this->getAmount(), 2, ",", "");
+        $x_total2 = 1080 - (strlen($total2) * 7);
+        $this->imagettftextWsb($slip, 12, 0, $x_total2, 54, $black, $font_roboto, $total2);
+
+        $this->imagettftextWsb($slip, 14, 0, 35, 60, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_NAME]);
+        $this->imagettftextWsb($slip, 14, 0, 35, 80, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER]);
+        $this->imagettftextWsb($slip, 14, 0, 35, 100, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_ZIPCODE] . " " . $this->options[OptionsEnum::DEBTOR_CITY]);
+
+        $this->imagettftextWsb($slip, 14, 0, 35, 200, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_NAME]);
+        $this->imagettftextWsb($slip, 14, 0, 35, 220, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER]);
+        $this->imagettftextWsb($slip, 14, 0, 35, 240, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_ZIPCODE] . " " . $this->options[OptionsEnum::BENEFICIARY_CITY]);
+
+        $debtor_l = $this->options[OptionsEnum::DEBTOR_NAME] . ", " . $this->options[OptionsEnum::DEBTOR_CITY];
+        $x_sender2 = 1080 - (strlen($debtor_l) * 7);
+        $this->imagettftextWsb($slip, 12, 0, $x_sender2, 86, $black, $font_roboto, $debtor_l);
+
+
+        $reference2 = $this->options[OptionsEnum::HR_MODEL] . " " . $this->options[OptionsEnum::PAYMENT_REFERENCE];
+        $x_reference2 = 1080 - (strlen($reference2) * 7);
+        $this->imagettftextWsb($slip, 12, 0, $x_reference2, 201, $black, $font_roboto, $reference2);
+
+        $x_iban2 = 1080 - (strlen($this->iban) * 7);
+        $this->imagettftextWsb($slip, 12, 0, $x_iban2, 162, $black, $font_roboto, $this->iban);
+
+
+        $qrCode->resizeImage(280, 70,Imagick::FILTER_LANCZOS,1, true);
+        $slip->compositeImage($qrCode, \Imagick::COMPOSITE_ATOP, 40, 305);
+
+        $slip->setImageFormat('jpg');
+        $png =  $slip->getImageBlob();
 
         $htmlRes = '<div id="hr_payment_slip">'
-            . '<img src="data:image/png;base64,' . base64_encode($png) . ' width="100%" style="width: 8cm; height: auto;" />'
+            . '<img src="data:image/png;base64,' . base64_encode($png) . '" width="100%" />'
             . '</div>';
+
+        file_put_contents('hr.html', $htmlRes);
 
         return $htmlRes;
     }

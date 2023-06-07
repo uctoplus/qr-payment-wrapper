@@ -31,8 +31,8 @@ class GeneratorData
         if (strlen($reference) > 22)
             throw new \UnexpectedValueException('reference too long');
 
-        if (strlen($code) !== 4)
-            throw new \UnexpectedValueException('invalid code');
+//        if (strlen($code) !== 4)
+//            throw new \UnexpectedValueException('invalid code');
 
         $this->payer = $payer;
         $this->payee = $payee;
