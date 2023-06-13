@@ -27,6 +27,11 @@ class QrInvoice
     protected $currency = "EUR";
 
     /**
+     * @var string
+     */
+    protected $invoiceNumber = "";
+
+    /**
      * @var QrIssuer|null
      */
     protected ?QrIssuer $issuer = null;
@@ -141,5 +146,21 @@ class QrInvoice
         return $this;
     }
 
+    /**
+     * @return string
+     */
+    public function getInvoiceNumber(): string
+    {
+        return $this->invoiceNumber;
+    }
 
+    /**
+     * @param string $invoiceNumber
+     * @return $this
+     */
+    public function setInvoiceNumber(string $invoiceNumber): self
+    {
+        $this->invoiceNumber = $invoiceNumber;
+        return $this;
+    }
 }
