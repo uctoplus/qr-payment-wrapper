@@ -20,7 +20,7 @@ class QrItem
     protected $vatAmount = 0;
 
     /**
-     * @var int
+     * @var float
      */
     protected $vatRate = 0;
 
@@ -43,54 +43,54 @@ class QrItem
     }
 
     /**
-     * @return int
+     * @return float|int
      */
-    public function getBaseAmount(): int
+    public function getBaseAmount()
     {
         return $this->baseAmount;
     }
 
     /**
-     * @param int $baseAmount
+     * @param $baseAmount
      * @return QrItem
      */
-    public function setBaseAmount(int $baseAmount): self
+    public function setBaseAmount($baseAmount): self
     {
         $this->baseAmount = $baseAmount;
         return $this;
     }
 
     /**
-     * @return int
+     * @return float|int
      */
-    public function getVatAmount(): int
+    public function getVatAmount()
     {
         return $this->vatAmount;
     }
 
     /**
-     * @param int $vatAmount
+     * @param $vatAmount
      * @return QrItem
      */
-    public function setVatAmount(int $vatAmount): self
+    public function setVatAmount($vatAmount): self
     {
         $this->vatAmount = $vatAmount;
         return $this;
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getVatRate(): int
+    public function getVatRate()
     {
         return $this->vatRate;
     }
 
     /**
-     * @param int $vatRate
-     * @return QrItem
+     * @param $vatRate
+     * @return $this
      */
-    public function setVatRate(int $vatRate): self
+    public function setVatRate($vatRate): self
     {
         $this->vatRate = $vatRate;
         return $this;

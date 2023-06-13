@@ -5,6 +5,9 @@ namespace Uctoplus\QrPaymentWrapper\SK;
 use DateTime;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 use rikudou\SkQrPayment\QrPayment;
+use rikudou\SkQrPayment\Xz\XzBinaryLocator;
+use rikudou\SkQrPayment\Xz\XzBinaryLocatorInterface;
+use Uctoplus\QrPaymentWrapper\Exceptions\InvalidTypeException;
 use Uctoplus\QrPaymentWrapper\Exceptions\QrParserException;
 use Uctoplus\QrPaymentWrapper\Interfaces\QrParserInterface;
 
@@ -19,24 +22,30 @@ class QrPaymentParser extends BaseQrParser implements QrParserInterface
 {
     /**
      * @param $data
-     * @return QrPayment
+     * @return QrPayment|\Uctoplus\QrPaymentWrapper\SK\QrPayment
      * @throws QrParserException
      */
     public function parse($data)
     {
         $step1 = $this->convertToBytes($data);
+
+        if (substr($data, 0, 2) !== '00')
+            throw new InvalidTypeException('Invalid QR type: ' . substr($data, 0, 2));
+
         $step2 = $this->decompress($step1);
 
         $explode = explode("\t", $step2);
 
-        $payment = new QrPayment();
+//        $payment = new QrPayment();
+        $payment = new \Uctoplus\QrPaymentWrapper\SK\QrPayment();
         $payment->setInternalId($explode[0]);
 
         $payment->setAmount($explode[3]);
         $payment->setCurrency($explode[4]);
-        if (!empty($explode[5])) {
-            $payment->setDueDate(DateTime::createFromFormat("Ymd", $explode[5]));
-        }
+
+        if (!empty($explode[5]))
+            $payment->setDueDate(\DateTime::createFromFormat("Ymd", $explode[5]));
+
         $payment->setVariableSymbol($explode[6]);
         $payment->setConstantSymbol($explode[7]);
         $payment->setSpecificSymbol($explode[8]);
