@@ -2,6 +2,7 @@
 
 namespace Uctoplus\QrPaymentWrapper\SK;
 
+use Uctoplus\QrPaymentWrapper\Exceptions\InvalidTypeException;
 use Uctoplus\QrPaymentWrapper\Interfaces\QrParserInterface;
 use Uctoplus\QrPaymentWrapper\Models\QrInvoice;
 use Uctoplus\QrPaymentWrapper\Models\QrIssuer;
@@ -24,6 +25,10 @@ class QrInvoiceParser extends BaseQrParser implements QrParserInterface
     public function parse($data)
     {
         $step1 = $this->convertToBytes($data);
+
+        if (substr($data, 0, 2) !== '20')
+            throw new InvalidTypeException('Invalid QR type: ' . substr($data, 0, 2));
+
         $step2 = $this->decompress($step1);
 
         $explode = explode("\t", $step2);
