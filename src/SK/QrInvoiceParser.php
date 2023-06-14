@@ -2,6 +2,7 @@
 
 namespace Uctoplus\QrPaymentWrapper\SK;
 
+use DateTime;
 use Uctoplus\QrPaymentWrapper\Exceptions\InvalidTypeException;
 use Uctoplus\QrPaymentWrapper\Interfaces\QrParserInterface;
 use Uctoplus\QrPaymentWrapper\Models\QrInvoice;
@@ -20,7 +21,7 @@ class QrInvoiceParser extends BaseQrParser implements QrParserInterface
 
     /**
      * @param $data
-     * @return \Uctoplus\QrPaymentWrapper\Models\QrInvoice
+     * @return QrInvoice
      */
     public function parse($data)
     {
@@ -34,8 +35,8 @@ class QrInvoiceParser extends BaseQrParser implements QrParserInterface
         $explode = explode("\t", $step2);
 
         $invoice = new QrInvoice();
-        $invoice->setIssueDate(\DateTime::createFromFormat("Ymd", $explode[1]));
-        $invoice->setDeliveryDate(\DateTime::createFromFormat("Ymd", $explode[2]));
+        $invoice->setIssueDate(DateTime::createFromFormat("Ymd", $explode[1]));
+        $invoice->setDeliveryDate(DateTime::createFromFormat("Ymd", $explode[2]));
         $invoice->setInvoiceNumber($explode[3]);
         $invoice->setCurrency($explode[5]);
 

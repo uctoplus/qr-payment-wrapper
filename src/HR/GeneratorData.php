@@ -2,6 +2,8 @@
 
 namespace Uctoplus\QrPaymentWrapper\HR;
 
+use UnexpectedValueException;
+
 class GeneratorData
 {
     public $payer, $payee;
@@ -20,16 +22,16 @@ class GeneratorData
     )
     {
         if (!verify_iban($iban, true))
-            throw new \UnexpectedValueException('invalid IBAN provided');
+            throw new UnexpectedValueException('invalid IBAN provided');
 
         if (strlen($currency) !== 3)
-            throw new \UnexpectedValueException('invalid currency');
+            throw new UnexpectedValueException('invalid currency');
 
         if (strlen($model) !== 4)
-            throw new \UnexpectedValueException('invalid model');
+            throw new UnexpectedValueException('invalid model');
 
         if (strlen($reference) > 22)
-            throw new \UnexpectedValueException('reference too long');
+            throw new UnexpectedValueException('reference too long');
 
 //        if (strlen($code) !== 4)
 //            throw new \UnexpectedValueException('invalid code');

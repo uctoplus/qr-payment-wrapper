@@ -2,7 +2,9 @@
 
 namespace Uctoplus\QrPaymentWrapper\Exceptions;
 
-class InvalidTypeException extends \Exception
+use Exception;
+
+class InvalidTypeException extends Exception
 {
 
 }

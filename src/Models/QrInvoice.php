@@ -2,6 +2,8 @@
 
 namespace Uctoplus\QrPaymentWrapper\Models;
 
+use DateTime;
+
 /**
  * Class Invoice
  *
@@ -12,14 +14,14 @@ namespace Uctoplus\QrPaymentWrapper\Models;
 class QrInvoice
 {
     /**
-     * @var \DateTime|null
+     * @var DateTime|null
      */
-    protected ?\DateTime $issueDate = null;
+    protected ?DateTime $issueDate = null;
 
     /**
-     * @var \DateTime|null
+     * @var DateTime|null
      */
-    protected ?\DateTime $deliveryDate = null;
+    protected ?DateTime $deliveryDate = null;
 
     /**
      * @var string
@@ -42,18 +44,18 @@ class QrInvoice
     protected array $items = [];
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
-    public function getIssueDate(): ?\DateTime
+    public function getIssueDate(): ?DateTime
     {
         return $this->issueDate;
     }
 
     /**
-     * @param \DateTime|null $issueDate
+     * @param DateTime|null $issueDate
      * @return $this
      */
-    public function setIssueDate(?\DateTime $issueDate): self
+    public function setIssueDate(?DateTime $issueDate): self
     {
         $this->issueDate = $issueDate;
 
@@ -61,18 +63,18 @@ class QrInvoice
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
-    public function getDeliveryDate(): ?\DateTime
+    public function getDeliveryDate(): ?DateTime
     {
         return $this->deliveryDate;
     }
 
     /**
-     * @param \DateTime|null $deliveryDate
+     * @param DateTime|null $deliveryDate
      * @return $this
      */
-    public function setDeliveryDate(?\DateTime $deliveryDate): self
+    public function setDeliveryDate(?DateTime $deliveryDate): self
     {
         $this->deliveryDate = $deliveryDate;
 

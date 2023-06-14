@@ -3,6 +3,8 @@
 namespace Uctoplus\QrPaymentWrapper;
 
 use rikudou\SkQrPayment\QrPayment;
+use Throwable;
+use Uctoplus\QrPaymentWrapper\CH\QrPaymentParser;
 use Uctoplus\QrPaymentWrapper\Exceptions\QrParserException;
 
 class BaseQrPaymentParser
@@ -11,7 +13,7 @@ class BaseQrPaymentParser
         \Uctoplus\QrPaymentWrapper\CZ\QrPaymentParser::class,
         \Uctoplus\QrPaymentWrapper\EU\QrPaymentParser::class,
         \Uctoplus\QrPaymentWrapper\SK\QrPaymentParser::class,
-        \Uctoplus\QrPaymentWrapper\CH\QrPaymentParser::class
+        QrPaymentParser::class
     ];
 
     private $parser;
@@ -31,7 +33,7 @@ class BaseQrPaymentParser
                 $this->parser = $parser;
 
                 return $res;
-            } catch (\Throwable $throwable) {
+            } catch (Throwable $throwable) {
                 continue;
             }
         }

@@ -2,6 +2,8 @@
 
 namespace Uctoplus\QrPaymentWrapper\Exceptions;
 
+use Exception;
+
 /**
  * Class QrParserException
  *
@@ -9,7 +11,7 @@ namespace Uctoplus\QrPaymentWrapper\Exceptions;
  * @copyright EpicFail | Studio
  * @package Uctoplus\QrPaymentWrapper\Exceptions
  */
-class QrParserException extends \Exception
+class QrParserException extends Exception
 {
 
 }

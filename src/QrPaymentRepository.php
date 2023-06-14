@@ -7,6 +7,7 @@ use DateTimeInterface;
 use Exception;
 use Imagick;
 use ImagickDraw;
+use ImagickPixel;
 use InvalidArgumentException;
 use LogicException;
 use rikudou\EuQrPayment\Exceptions\UnsupportedMethodException;
@@ -312,7 +313,7 @@ class QrPaymentRepository implements QrPaymentInterface
 
     protected function hrPayment()
     {
-        if(empty($this->options[OptionsEnum::HR_MODEL])){
+        if (empty($this->options[OptionsEnum::HR_MODEL])) {
             $this->options[OptionsEnum::HR_MODEL] = "HR00";
         }
 
@@ -428,7 +429,7 @@ class QrPaymentRepository implements QrPaymentInterface
 
         $font_roboto = __DIR__ . '/../resources/RobotoMono-Regular.ttf';
 
-        $black = new \ImagickPixel();
+        $black = new ImagickPixel();
         $black->setColor('rgba(48, 48, 48, 1.0)');
 
         $slip = new Imagick();
@@ -436,7 +437,7 @@ class QrPaymentRepository implements QrPaymentInterface
 
         $this->imagettftextWsb($slip, 18, 0, 402, 54, $black, $font_roboto, $this->getCurrency(), 3);
 
-        $total = "=" . number_format( $this->getAmount(), 2, "", "");
+        $total = "=" . number_format($this->getAmount(), 2, "", "");
         $x_total = 768 - (strlen($total) * 17);
         $this->imagettftextWsb($slip, 18, 0, $x_total, 55, $black, $font_roboto, $total, 3);
         $this->imagettftextWsb($slip, 18, 0, 401, 160, $black, $font_roboto, $this->iban, 3);
@@ -451,7 +452,7 @@ class QrPaymentRepository implements QrPaymentInterface
         $this->imagettftextWsb($slip, 12, 0, 438, 227, $black, $font_roboto, $this->options[OptionsEnum::HR_DESCRIPTION] ?? $this->options[OptionsEnum::PAYMENT_REFERENCE]);
         $this->imagettftextWsb($slip, 12, 0, 805, 240, $black, $font_roboto, $this->options[OptionsEnum::HR_DESCRIPTION] ?? $this->options[OptionsEnum::PAYMENT_REFERENCE]);
 
-        $total2 = $this->getCurrency() . " =" . number_format( $this->getAmount(), 2, ",", "");
+        $total2 = $this->getCurrency() . " =" . number_format($this->getAmount(), 2, ",", "");
         $x_total2 = 1080 - (strlen($total2) * 7);
         $this->imagettftextWsb($slip, 12, 0, $x_total2, 54, $black, $font_roboto, $total2);
 
@@ -476,11 +477,11 @@ class QrPaymentRepository implements QrPaymentInterface
         $this->imagettftextWsb($slip, 12, 0, $x_iban2, 162, $black, $font_roboto, $this->iban);
 
 
-        $qrCode->resizeImage(280, 70,Imagick::FILTER_LANCZOS,1, true);
-        $slip->compositeImage($qrCode, \Imagick::COMPOSITE_ATOP, 40, 305);
+        $qrCode->resizeImage(280, 70, Imagick::FILTER_LANCZOS, 1, true);
+        $slip->compositeImage($qrCode, Imagick::COMPOSITE_ATOP, 40, 305);
 
         $slip->setImageFormat('jpg');
-        $png =  $slip->getImageBlob();
+        $png = $slip->getImageBlob();
 
         $htmlRes = '<div id="hr_payment_slip">'
             . '<img src="data:image/png;base64,' . base64_encode($png) . '" width="100%" />'

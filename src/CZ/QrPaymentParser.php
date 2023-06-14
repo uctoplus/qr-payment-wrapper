@@ -2,6 +2,8 @@
 
 namespace Uctoplus\QrPaymentWrapper\CZ;
 
+use DateTime;
+use Rikudou\CzQrPayment\QrPayment;
 use rikudou\SkQrPayment\Iban\IbanBicPair;
 
 class QrPaymentParser
@@ -15,11 +17,11 @@ class QrPaymentParser
 
         $iban = new IbanBicPair($_ibanExploded[0], $_ibanExploded[1]);
 
-        $payment = new \Rikudou\CzQrPayment\QrPayment($iban);
+        $payment = new QrPayment($iban);
         $payment->setAmount(str_replace('AM:', '', $exploded[3]));
         $payment->setCurrency(str_replace('CC:', '', $exploded[4]));
         $payment->setComment(str_replace('MSG:', '', $exploded[5]));
-        $payment->setDueDate(\DateTime::createFromFormat("Ymd", str_replace('DT:', '', $exploded[6])));
+        $payment->setDueDate(DateTime::createFromFormat("Ymd", str_replace('DT:', '', $exploded[6])));
         $payment->setVariableSymbol(str_replace('CC:', '', $exploded[7]));
         $payment->setConstantSymbol(str_replace('CC:', '', $exploded[8]));
 

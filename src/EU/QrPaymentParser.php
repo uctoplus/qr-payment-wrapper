@@ -4,9 +4,7 @@ namespace Uctoplus\QrPaymentWrapper\EU;
 
 use Exception;
 use rikudou\EuQrPayment\Iban\IBAN;
-use rikudou\SkQrPayment\Iban\IbanBicPair;
-use rikudou\SkQrPayment\QrPayment;
-use Uctoplus\QrPaymentWrapper\Exceptions\QrParserException;
+use rikudou\EuQrPayment\QrPayment;
 
 class QrPaymentParser
 {
@@ -36,7 +34,7 @@ class QrPaymentParser
             $_info = $exploded[11];
 
         $iban = new IBAN($_iban);
-        $payment = new \rikudou\EuQrPayment\QrPayment($iban);
+        $payment = new QrPayment($iban);
 
         if (!empty($_beneficiaryName))
             $payment->setBeneficiaryName($_beneficiaryName);
