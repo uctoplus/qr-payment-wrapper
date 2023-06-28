@@ -25,10 +25,10 @@ class QrPaymentParser extends BaseQrParser implements QrParserInterface
      */
     public function parse($data)
     {
-        $step1 = $this->convertToBytes($data);
-
         if (substr($data, 0, 2) !== '00')
             throw new InvalidTypeException('Invalid QR type: ' . substr($data, 0, 2));
+
+        $step1 = $this->convertToBytes($data);
 
         $step2 = $this->decompress($step1);
 
