@@ -322,14 +322,14 @@ class QrPaymentRepository implements QrPaymentInterface
 //        }
 
         $debtor = new stdClass();
-        $debtor->name = $this->options[OptionsEnum::DEBTOR_NAME];
-        $debtor->address = $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER];
-        $debtor->city = $this->options[OptionsEnum::DEBTOR_CITY];
+        $debtor->name = $this->options[OptionsEnum::DEBTOR_NAME] ?? '';
+        $debtor->address = $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER] ?? '';
+        $debtor->city = $this->options[OptionsEnum::DEBTOR_CITY] ?? '';
 
         $creditor = new stdClass();
-        $creditor->name = $this->options[OptionsEnum::BENEFICIARY_NAME];
-        $creditor->address = $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER];
-        $creditor->city = $this->options[OptionsEnum::BENEFICIARY_CITY];
+        $creditor->name = $this->options[OptionsEnum::BENEFICIARY_NAME] ?? '';
+        $creditor->address = $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER] ?? '';
+        $creditor->city = $this->options[OptionsEnum::BENEFICIARY_CITY] ?? '';
 
         $data = new GeneratorData(
             $debtor,
@@ -337,8 +337,8 @@ class QrPaymentRepository implements QrPaymentInterface
             $this->iban,
             $this->getCurrency(),
             $this->getAmount(),
-            $this->options[OptionsEnum::HR_MODEL],
-            $this->options[OptionsEnum::PAYMENT_REFERENCE],
+            $this->options[OptionsEnum::HR_MODEL] ?? '',
+            $this->options[OptionsEnum::PAYMENT_REFERENCE] ?? '',
             $this->options[OptionsEnum::HR_PURPOSE] ?? "",
             $this->options[OptionsEnum::HR_DESCRIPTION] ?? $this->options[OptionsEnum::PAYMENT_REFERENCE]
         );
@@ -456,15 +456,15 @@ class QrPaymentRepository implements QrPaymentInterface
         $x_total2 = 1080 - (strlen($total2) * 7);
         $this->imagettftextWsb($slip, 12, 0, $x_total2, 54, $black, $font_roboto, $total2);
 
-        $this->imagettftextWsb($slip, 14, 0, 35, 60, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_NAME]);
-        $this->imagettftextWsb($slip, 14, 0, 35, 80, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER]);
-        $this->imagettftextWsb($slip, 14, 0, 35, 100, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_ZIPCODE] . " " . $this->options[OptionsEnum::DEBTOR_CITY]);
+        $this->imagettftextWsb($slip, 14, 0, 35, 60, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_NAME] ?? '');
+        $this->imagettftextWsb($slip, 14, 0, 35, 80, $black, $font_roboto, $this->options[OptionsEnum::DEBTOR_STREET_AND_NUMBER] ?? '');
+        $this->imagettftextWsb($slip, 14, 0, 35, 100, $black, $font_roboto, ($this->options[OptionsEnum::DEBTOR_ZIPCODE] ?? '') . " " . ($this->options[OptionsEnum::DEBTOR_CITY] ?? ''));
 
-        $this->imagettftextWsb($slip, 14, 0, 35, 200, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_NAME]);
-        $this->imagettftextWsb($slip, 14, 0, 35, 220, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER]);
-        $this->imagettftextWsb($slip, 14, 0, 35, 240, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_ZIPCODE] . " " . $this->options[OptionsEnum::BENEFICIARY_CITY]);
+        $this->imagettftextWsb($slip, 14, 0, 35, 200, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_NAME] ?? '');
+        $this->imagettftextWsb($slip, 14, 0, 35, 220, $black, $font_roboto, $this->options[OptionsEnum::BENEFICIARY_STREET_AND_NUMBER] ?? '');
+        $this->imagettftextWsb($slip, 14, 0, 35, 240, $black, $font_roboto, ($this->options[OptionsEnum::BENEFICIARY_ZIPCODE] ?? '') . " " . ($this->options[OptionsEnum::BENEFICIARY_CITY] ?? ''));
 
-        $debtor_l = $this->options[OptionsEnum::DEBTOR_NAME] . ", " . $this->options[OptionsEnum::DEBTOR_CITY];
+        $debtor_l = ($this->options[OptionsEnum::DEBTOR_NAME] ?? '') . ", " . ($this->options[OptionsEnum::DEBTOR_CITY] ?? '');
         $x_sender2 = 1080 - (strlen($debtor_l) * 7);
         $this->imagettftextWsb($slip, 12, 0, $x_sender2, 86, $black, $font_roboto, $debtor_l);
 
