@@ -36,9 +36,9 @@ class QrInvoiceParser extends BaseQrParser implements QrParserInterface
 
         $invoice = new QrInvoice();
 
-        if (!empty($explode[1]))
+        if (!empty($explode[1]) && !is_bool($explode[1]))
             $invoice->setIssueDate(DateTime::createFromFormat("Ymd", $explode[1]));
-        if (!empty($explode[2]))
+        if (!empty($explode[2]) && !is_bool($explode[2]))
             $invoice->setDeliveryDate(DateTime::createFromFormat("Ymd", $explode[2]));
 
         $invoice->setInvoiceNumber($explode[3]);
