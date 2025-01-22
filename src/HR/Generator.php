@@ -2,8 +2,8 @@
 
 namespace Uctoplus\QrPaymentWrapper\HR;
 
-use BigFish\PDF417\PDF417;
-use BigFish\PDF417\Renderers\SvgRenderer;
+use Le\PDF417\PDF417;
+use Le\PDF417\Renderer\SvgRenderer;
 
 class Generator
 {

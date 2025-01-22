@@ -2,7 +2,7 @@
 
 namespace Uctoplus\QrPaymentWrapper;
 
-use BigFish\PDF417\Renderers\SvgRenderer;
+use Le\PDF417\Renderer\SvgRenderer;
 use DateTimeInterface;
 use Exception;
 use Imagick;
