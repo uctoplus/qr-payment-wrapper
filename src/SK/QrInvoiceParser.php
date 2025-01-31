@@ -43,6 +43,7 @@ class QrInvoiceParser extends BaseQrParser implements QrParserInterface
 
         $invoice->setInvoiceNumber($explode[3]);
         $invoice->setCurrency($explode[5]);
+        $invoice->setInvoiceDescription($explode[28]);
 
         $issuer = new QrIssuer();
         $issuer->setName($explode[9]);

@@ -34,6 +34,11 @@ class QrInvoice
     protected $invoiceNumber = "";
 
     /**
+     * @var string
+     */
+    protected $invoiceDescription = "";
+
+    /**
      * @var QrIssuer|null
      */
     protected ?QrIssuer $issuer = null;
@@ -163,6 +168,24 @@ class QrInvoice
     public function setInvoiceNumber(string $invoiceNumber): self
     {
         $this->invoiceNumber = $invoiceNumber;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInvoiceDescription(): string
+    {
+        return $this->invoiceDescription;
+    }
+
+    /**
+     * @param string $invoiceDescription
+     * @return $this
+     */
+    public function setInvoiceDescription(string $invoiceDescription): self
+    {
+        $this->invoiceDescription = $invoiceDescription;
         return $this;
     }
 }
